@@ -1,0 +1,47 @@
+name: Deploy and Notify
+
+on:
+  push:
+    branches:
+      - main  # เปลี่ยนเป็น branch ที่ต้องการ deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'  # ตั้งค่า Node.js เวอร์ชันที่ต้องการ
+
+    - name: Install dependencies
+      run: |
+        npm install  # ติดตั้ง dependencies
+
+    - name: Build the project
+      run: |
+        npm run build  # รันคำสั่ง build ของโปรเจกต์
+
+    - name: Deploy application and send Telegram notification
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}  # Token ของบอท Telegram
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}  # Chat ID ของกลุ่มหรือผู้ใช้
+      run: |
+        echo "Starting deployment..."
+
+        # ส่งการแจ้งเตือนว่า deployment เริ่มต้น
+        curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+        -d chat_id=${TELEGRAM_CHAT_ID} \
+        -d text="Deployment started for $(date +'%Y-%m-%d %H:%M:%S')"
+
+        # ตัวอย่างคำสั่ง deploy (ปรับเปลี่ยนให้เหมาะสมกับโปรเจกต์ของคุณ)
+        echo "Deploying application..."
+
+        # ส่งการแจ้งเตือนว่า deployment สำเร็จ
+        curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+        -d chat_id=${TELEGRAM_CHAT_ID} \
+        -d text="Deployment successful on $(date +'%Y-%m-%d %H:%M:%S')"
